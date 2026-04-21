@@ -1,0 +1,4 @@
+const CONFIG = {
+    UNSPLASH_KEY: "n8-ANnPN-bePhg2uEiqvFg5iRPLY7I9e5FhSUHen98Y",
+    NEWS_API_KEY: "c6e10e4f66484727840f68ecff26b7ff"
+};

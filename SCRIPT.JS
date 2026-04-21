@@ -65,7 +65,7 @@ let receipts = JSON.parse(localStorage.getItem('receipts')) || [];
 // ===============================
 // UNSPLASH IMAGE API
 // ===============================
-const UNSPLASH_KEY = "n8-ANnPN-bePhg2uEiqvFg5iRPLY7I9e5FhSUHen98Y";
+const UNSPLASH_KEY = CONFIG.UNSPLASH_KEY;
 
 // FETCH IMAGE BASED ON HOUSE TYPE
 async function getHouseImage(type) {
@@ -166,7 +166,7 @@ async function renderHouseListings(listings = houseListings) {
 // NEW: ASYNC FETCH (WEB APIs)
 //===============================
 async function fetchGlobalAnnouncements() {
-    const MY_API_KEY = 'c6e10e4f66484727840f68ecff26b7ff'; 
+    const MY_API_KEY = CONFIG.NEWS_API_KEY;
     const url = `https://newsapi.org/v2/top-headlines?country=us&pageSize=5&apiKey=${MY_API_KEY}`;
 
     try {
