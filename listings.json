@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "title": "1 Bedroom in Kilimani",
+    "location": "Kilimani, Nairobi",
+    "price": 25000,
+    "type": "Apartment",
+    "image": "https://via.placeholder.com/300"
+  },
+  {
+    "id": 2,
+    "title": "Studio in Westlands",
+    "location": "Westlands, Nairobi",
+    "price": 18000,
+    "type": "Studio",
+    "image": "https://via.placeholder.com/300"
+  },
+  {
+    "id": 3,
+    "title": "2 Bedroom in Ruaka",
+    "location": "Ruaka, Nairobi",
+    "price": 30000,
+    "type": "Apartment",
+    "image": "https://via.placeholder.com/300"
+  }
+]

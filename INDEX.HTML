@@ -4,105 +4,107 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TenantFlow | Resident Portal</title>
+    <!-- TAILWIND CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://googleapis.com" rel="stylesheet">
-    <style>body { font-family: 'Inter', sans-serif; }</style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .section { transition: all 0.3s ease; }
+    </style>
 </head>
-<body class="bg-slate-50 text-slate-900">
 
-<!-- Login Section -->
-<div id="loginSection" class="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-600 to-indigo-800">
-    <div class="bg-white p-10 rounded-3xl shadow-2xl w-full max-w-sm transform transition hover:scale-[1.02]">
-        <div class="flex justify-center mb-6">
-            <div class="bg-blue-100 p-4 rounded-2xl text-blue-600 text-3xl">🏠</div>
+<body class="bg-slate-50 text-slate-900 min-h-screen">
+
+<!-- LOGIN SECTION -->
+<div id="loginSection" class="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-700 to-indigo-900 px-4">
+    <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-sm">
+        <div class="text-center mb-8">
+            <h1 class="text-2xl font-black text-blue-600">TenantFlow</h1>
+            <p class="text-slate-500 text-sm">Resident Access Portal</p>
         </div>
-        <h2 class="text-3xl font-black text-center mb-2 text-slate-800">Welcome</h2>
-        <p class="text-slate-500 text-center mb-8">Log in to manage your apartment</p>
-        
-        <input type="text" id="username" placeholder="Full Name" class="border-2 border-slate-100 p-4 w-full rounded-2xl mb-4 outline-none focus:border-blue-400 transition-all">
-        <button onclick="login()" class="bg-blue-600 text-white font-bold py-4 rounded-2xl w-full hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all active:scale-95">Enter Portal</button>
+        <h2 class="text-xl font-bold mb-4">Welcome Back</h2>
+        <input type="text" id="username" placeholder="Full Name" class="border border-slate-200 p-4 w-full rounded-2xl mb-4 focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+        <button onclick="login()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl w-full shadow-lg shadow-blue-200 transition-all">Enter Portal</button>
     </div>
 </div>
 
+<!-- MAIN APP INTERFACE -->
 <div id="app" class="hidden">
-    <!-- Navigation -->
+    <!-- NAVIGATION -->
     <nav class="bg-white border-b border-slate-200 sticky top-0 z-50">
-        <div class="max-w-4xl mx-auto px-6 py-4 flex justify-between items-center">
-            <div class="flex items-center space-x-2">
-                <span class="bg-blue-600 text-white p-2 rounded-lg font-bold text-xs uppercase tracking-widest">TF</span>
-                <h1 class="text-xl font-black text-slate-800 tracking-tight">TenantFlow</h1>
+        <div class="max-w-5xl mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="font-black text-xl tracking-tight text-blue-600">TenantFlow</h1>
+
+            <div class="hidden md:flex space-x-6">
+                <button onclick="showSection('dashboard')" class="text-sm font-bold text-slate-600 hover:text-blue-600">Home</button>
+                <button onclick="showSection('my-receipts')" class="text-sm font-bold text-slate-600 hover:text-blue-600">Receipts</button>
+                <button onclick="showSection('messages')" class="text-sm font-bold text-slate-600 hover:text-blue-600">Memos</button>
+                <button onclick="showSection('search')" class="text-sm font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-lg">Find Houses</button>
             </div>
-            <div class="hidden md:flex space-x-1">
-                <button onclick="showSection('dashboard')" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-medium transition">Home</button>
-                <button onclick="showSection('my-receipts')" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-medium transition">Receipts</button>
-                <button onclick="showSection('messages')" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-medium transition">Memos</button>
-            </div>
-            <button onclick="logout()" class="bg-rose-50 text-rose-600 px-4 py-2 rounded-xl font-bold hover:bg-rose-100 transition text-sm">Vacate</button>
+
+            <button onclick="logout()" class="text-sm font-bold text-red-500 bg-red-50 px-4 py-2 rounded-xl hover:bg-red-100 transition-all">Logout</button>
         </div>
     </nav>
 
-    <!-- Content Area -->
-    <div class="p-6 max-w-4xl mx-auto space-y-8">
-        
+    <main class="p-6 max-w-5xl mx-auto">
         <!-- DASHBOARD -->
         <div id="dashboard" class="section space-y-6">
+            <div id="reminder" class="hidden"></div>
+            
             <header>
-                <h2 class="text-3xl font-black text-slate-800">My Dashboard</h2>
-                <p id="reminder" class="text-slate-500 mt-1"></p>
+                <h2 class="text-3xl font-black">Dashboard</h2>
+                <p class="text-slate-500 text-sm">Overview of your current utility status</p>
             </header>
 
-            <div class="grid gap-4">
-                <!-- Rent Card -->
-                <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between hover:border-blue-300 transition-all">
-                    <div class="flex items-center space-x-4">
-                        <div class="bg-blue-50 text-blue-600 p-4 rounded-2xl text-xl">🏛️</div>
-                        <div>
-                            <p class="text-slate-400 text-xs font-bold uppercase tracking-widest">House Rent</p>
-                            <span id="rentStatus" class="font-black text-rose-500">UNPAID</span>
-                        </div>
-                    </div>
-                    <button onclick="payBill('rent')" class="bg-slate-900 text-white px-6 py-3 rounded-2xl font-bold hover:bg-blue-600 transition shadow-md active:scale-95">Pay $500</button>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Status Cards -->
+                <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Rent Bill</span>
+                    <p id="rentStatus" class="text-2xl font-black my-2">---</p>
+                    <button onclick="payBill('rent')" class="w-full mt-4 bg-slate-900 text-white py-3 rounded-2xl text-sm font-bold hover:bg-blue-600 transition-all">Pay $500</button>
                 </div>
-
-                <!-- Water Card -->
-                <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between hover:border-cyan-300 transition-all">
-                    <div class="flex items-center space-x-4">
-                        <div class="bg-cyan-50 text-cyan-600 p-4 rounded-2xl text-xl">💧</div>
-                        <div>
-                            <p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Water Utility</p>
-                            <span id="waterStatus" class="font-black text-rose-500">UNPAID</span>
-                        </div>
-                    </div>
-                    <button onclick="payBill('water')" class="bg-slate-900 text-white px-6 py-3 rounded-2xl font-bold hover:bg-cyan-600 transition shadow-md active:scale-95">Pay $30</button>
+                <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Water Bill</span>
+                    <p id="waterStatus" class="text-2xl font-black my-2">---</p>
+                    <button onclick="payBill('water')" class="w-full mt-4 bg-slate-900 text-white py-3 rounded-2xl text-sm font-bold hover:bg-blue-600 transition-all">Pay $50</button>
                 </div>
-
-                <!-- Electricity Card -->
-                <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between hover:border-amber-300 transition-all">
-                    <div class="flex items-center space-x-4">
-                        <div class="bg-amber-50 text-amber-600 p-4 rounded-2xl text-xl">⚡</div>
-                        <div>
-                            <p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Electricity</p>
-                            <span id="electricityStatus" class="font-black text-rose-500">UNPAID</span>
-                        </div>
-                    </div>
-                    <button onclick="payBill('electricity')" class="bg-slate-900 text-white px-6 py-3 rounded-2xl font-bold hover:bg-amber-600 transition shadow-md active:scale-95">Pay $75</button>
+                <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Electricity Bill</span>
+                    <p id="electricityStatus" class="text-2xl font-black my-2">---</p>
+                    <button onclick="payBill('electricity')" class="w-full mt-4 bg-slate-900 text-white py-3 rounded-2xl text-sm font-bold hover:bg-blue-600 transition-all">Pay $50</button>
                 </div>
             </div>
         </div>
 
         <!-- RECEIPTS -->
-        <div id="my-receipts" class="section hidden space-y-6">
-            <h2 class="text-3xl font-black text-slate-800">Payment History</h2>
-            <ul id="receiptList" class="space-y-3"></ul>
+        <div id="my-receipts" class="section hidden">
+            <h2 class="text-3xl font-black mb-6">Receipt History</h2>
+            <div class="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm">
+                <ul id="receiptList" class="divide-y divide-slate-50"></ul>
+            </div>
         </div>
 
-        <!-- MESSAGES -->
-        <div id="messages" class="section hidden space-y-6">
-            <h2 class="text-3xl font-black text-slate-800">Memos & Announcements</h2>
+        <!-- MEMOS -->
+        <div id="messages" class="section hidden">
+            <h2 class="text-3xl font-black mb-6">Announcements</h2>
             <ul id="memoList" class="space-y-4"></ul>
         </div>
 
-    </div>
+        <!-- SEARCH -->
+        <div id="search" class="section hidden space-y-8">
+            <header>
+                <h2 class="text-3xl font-black">Marketplace</h2>
+                <p class="text-slate-500">Find your next home with our real-time listings</p>
+            </header>
+
+            <form id="searchForm" class="flex flex-wrap gap-4 bg-white p-4 rounded-3xl border border-slate-100 shadow-sm">
+                <input type="text" id="searchInput" placeholder="Enter city (e.g. New York)" class="flex-1 min-w-[200px] bg-slate-50 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                <button type="submit" class="bg-blue-600 text-white px-8 py-4 rounded-2xl font-bold hover:bg-blue-700 transition-all">Search Houses</button>
+            </form>
+
+            <div id="searchResult" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        </div>
+    </main>
 </div>
 
 <script src="SCRIPT.JS"></script>

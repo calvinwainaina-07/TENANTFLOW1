@@ -1,123 +1,197 @@
 // ===============================
-//1. THE BILL DATA(OUR FAKE DATABASE)
+// 1. THE BILL DATA(OUR FAKE DATABASE)
 // ===============================
+let bills = { rent: false, water: false, electricity: false };
 
-let bills = {
-    rent: false,
-    water: false,
-    electricity: false
-};
+// ===============================
+// HOUSE LISTINGS DATABASE (OUR FAKE DATABASE)
+// ===============================
+let houseListings = JSON.parse(localStorage.getItem('houseListings')) || [
+    {
+        id: 1,
+        title: "1 Bedroom in Kilimani",
+        location: "Kilimani, Nairobi",
+        price: 25000,
+        type: "Apartment",
+        image: ""
+    },
+    {
+        id: 2,
+        title: "Studio in Westlands",
+        location: "Westlands, Nairobi",
+        price: 18000,
+        type: "Studio",
+        image: ""
+    },
+    {
+        id: 3,
+        title: "2 Bedroom in Ruaka",
+        location: "Ruaka, Nairobi",
+        price: 30000,
+        type: "Apartment",
+        image: ""
+    }
+];
 
 
+async function searchHouses() {
+    const query = document.getElementById("searchInput").value.trim();
+    const resultsContainer = document.getElementById("searchResult");
+
+    if (!query) {
+        alert("Please enter a location or keyword");
+        return;
+    }
+
+    resultsContainer.innerHTML = `
+        <div class="col-span-full py-10 text-center text-slate-500">
+            Searching for "${query}"...
+        </div>
+    `;
+
+    const filtered = houseListings.filter(house =>
+        house.location.toLowerCase().includes(query.toLowerCase()) ||
+        house.type.toLowerCase().includes(query.toLowerCase()) ||
+        house.title.toLowerCase().includes(query.toLowerCase())
+    );
+
+    await renderHouseListings(filtered);
+}
 //===============================
-//THE RECIEPT STORAGE
+// THE RECIEPT STORAGE
 //===============================
-//WE NEED TO LOAD SAVED REIEPTS FROM THE BROWSER'S LOCAL STORAGE
-//WHEN THE PAGE LOADS, WE CHECK IF THERE ARE ANY SAVED RECEIPTS IN LOCAL STORAGE
-//IF THERE ARE, WE PARSE THEM AND STORE THEM IN THE RECEIPTS ARRAY
-//IF THERE ARE NO SAVED RECEIPTS, WE INITIALIZE THE RECEIPTS ARRAY AS AN EMPTY ARRAY
-
 let receipts = JSON.parse(localStorage.getItem('receipts')) || [];
 
+// ===============================
+// UNSPLASH IMAGE API
+// ===============================
+const UNSPLASH_KEY = "n8-ANnPN-bePhg2uEiqvFg5iRPLY7I9e5FhSUHen98Y";
 
+// FETCH IMAGE BASED ON HOUSE TYPE
+async function getHouseImage(type) {
+    try {
+        const response = await fetch(
+            `https://api.unsplash.com/search/photos?query=${type}&per_page=1&client_id=${UNSPLASH_KEY}`
+        );
 
-//===============================
-//THE SPA NAVIGATION
-//===============================
-//THIS SHOWS WHICH SECTIONS ARE VISIBLE AND WHICH ARE HIDDEN BASED ON THE NAVIGATION LINKS CLICKED BY THE USER
-//WE ADD EVENT LISTENERS TO THE NAVIGATION LINKS TO SHOW THE CORRESPONDING SECTIONS AND HIDE THE OTHERS
+        const data = await response.json();
 
-function showSection(sectionId) {
-    // Select all divs with the class "section"
-    const sections = document.querySelectorAll('.section');
-    
-    // Hide all of them using Tailwind's 'hidden' class
-    sections.forEach(s => s.classList.add('hidden'));
+        if (data.results && data.results.length > 0) {
+            return data.results[0].urls.small;
+        }
 
-    // Show the selected one by removing 'hidden'
-    const activeSection = document.getElementById(sectionId);
-    if (activeSection) {
-        activeSection.classList.remove('hidden');
+        return "https://via.placeholder.com/300";
+
+    } catch (error) {
+        console.error("Image API error:", error);
+        return "https://via.placeholder.com/300";
     }
 }
 
-
+//===============================
+// THE SPA NAVIGATION
+//===============================
+function showSection(sectionId) {
+    const sections = document.querySelectorAll('.section');
+    sections.forEach(s => s.classList.add('hidden'));
+    const activeSection = document.getElementById(sectionId);
+    if (activeSection) activeSection.classList.remove('hidden');
+}
 
 //===============================
-//UPDATE THE UI FUNCTION
-//THIS FUNCTION UPDATES THE TEXT +COLOR OF THE BILLS ON THE DASHBOARD BASED ON THEIR PAYMENT STATUS
-//IF A BILL IS PAID, WE CHANGE ITS TEXT TO "PAID" AND COLOR TO GREEN
-//IF A BILL IS UNPAID, WE CHANGE ITS TEXT TO "UNPAID" AND COLOR TO RED
+// UPDATE THE UI FUNCTION
 //===============================
-
 function updateUI() {
-
-    //LOOP THROUGH THE BILLS AND UPDATE THE UI ACCORDINGLY
     for (let bill in bills) {
-
         let billElement = document.getElementById(bill + 'Status');
-
         if (!billElement) continue;
+
+        const payButton = billElement.parentElement.querySelector('button');
 
         if (bills[bill]) {
             billElement.textContent = 'PAID';
-            // Using Tailwind classes for the green color
-            billElement.classList.remove('text-red-500');
-            billElement.classList.add('text-green-500');
+            billElement.className = "text-xl font-black py-2 text-green-500";
+
+            if (payButton) {
+                payButton.disabled = true;
+                payButton.textContent = "Completed";
+                payButton.className = "w-full mt-4 bg-slate-200 text-slate-400 py-3 rounded-2xl text-sm font-bold cursor-not-allowed";
+            }
         } else {
             billElement.textContent = 'UNPAID';
-            // Using Tailwind classes for the red color
-            billElement.classList.remove('text-green-500');
-            billElement.classList.add('text-red-500');
+            billElement.className = "text-xl font-black py-2 text-red-500";
         }
     }
 }
 
+//===============================
+// SAVE HOUSE LISTINGS
+//===============================
+function saveHouseListings() {
+    localStorage.setItem('houseListings', JSON.stringify(houseListings));
+}
 
+//===============================
+// RENDER HOUSE LISTINGS (WITH API IMAGES)
+//===============================
+async function renderHouseListings(listings = houseListings) {
+    const container = document.getElementById("searchResult");
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    for (let house of listings) {
+
+        // AUTO IMAGE FROM API
+        let imageUrl = await getHouseImage(house.type);
+
+        let card = document.createElement("div");
+        card.className = "bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden";
+
+        card.innerHTML = `
+            <img src="${imageUrl}" class="w-full h-40 object-cover" />
+            <div class="p-5">
+                <h3 class="font-black text-slate-800">${house.title}</h3>
+                <p class="text-slate-500 text-sm">${house.location}</p>
+                <p class="text-blue-600 font-black mt-2">KES ${house.price}</p>
+                <p class="text-xs text-slate-400">${house.type}</p>
+            </div>
+        `;
+
+        container.appendChild(card);
+    }
+}
 
 //===============================
 // NEW: ASYNC FETCH (WEB APIs)
 //===============================
-// This function uses Asynchronous JS to fetch real English announcements using an API Key.
-
 async function fetchGlobalAnnouncements() {
-    // FOR MARKS: Using a simulated API Key and a News API for English content
-    const MY_API_KEY = 'YOUR_NEWS_API_KEY_HERE'; 
-   const url = 'https://jsonplaceholder.typicode.com/posts?_limit=5';
+    const MY_API_KEY = 'c6e10e4f66484727840f68ecff26b7ff'; 
+    const url = `https://newsapi.org/v2/top-headlines?country=us&pageSize=5&apiKey=${MY_API_KEY}`;
+
     try {
-        // 'await' waits for the Web API (fetch) to finish in the background
-        const response = await fetch(url, {
-            headers: { 'X-Api-Key': MY_API_KEY }
-        });
-
+        const response = await fetch(url);
         const data = await response.json();
-        
-        let memoList = document.getElementById('memoList');
-        memoList.innerHTML = ""; // Clear existing content
 
-        // Adding a mock "Rent Due" system notification
+        if (data.status === "error") {
+            console.error("NewsAPI Error:", data.message);
+            return;
+        }
+
+        let memoList = document.getElementById('memoList');
+        if (!memoList) return;
+        memoList.innerHTML = "";
+
         let reminderLi = document.createElement('li');
-        reminderLi.className = "p-3 bg-orange-100 border-l-4 border-orange-500 text-orange-700 text-sm mb-2 list-none font-bold";
+        reminderLi.className = "p-4 bg-orange-50 border-l-4 border-orange-500 text-orange-800 text-sm mb-2 list-none font-bold rounded-r-xl";
         reminderLi.innerHTML = `⚠️ [SYSTEM]: Rent is due on the 5th of the month.`;
         memoList.appendChild(reminderLi);
 
-        // CUSTOM ENGLISH DATA
-        const landlordMessages = [
-            "General fumigation is scheduled for this coming Saturday.",
-            "Please ensure the main gate is locked after 10:00 PM.",
-            "Water supply will be interrupted tomorrow for tank cleaning.",
-            "New security measures: Please register all overnight guests.",
-            "Garbage collection has been moved from Monday to Tuesday."
-        ];
-
-        data.forEach((post, index) => {
+        const articles = data.articles || [];
+        articles.forEach((article) => {
             let li = document.createElement('li');
-            
-            li.className = "p-3 bg-blue-50 border-l-4 border-blue-500 text-blue-700 text-sm mb-2 list-none";
-
-            const message = landlordMessages[index] || "Please check the notice board for updates.";
-
-            li.innerHTML = `<strong>[LANDLORD]:</strong> ${message}`;
+            li.className = "p-4 bg-blue-50 border-l-4 border-blue-500 text-blue-800 text-sm mb-2 list-none rounded-r-xl shadow-sm";
+            li.innerHTML = `<strong>[NEWS]:</strong> ${article.title}`;
             memoList.appendChild(li);
         });
 
@@ -126,152 +200,104 @@ async function fetchGlobalAnnouncements() {
     }
 }
 
-
-
 //===============================
-//PAY BILL FUNCTION
-//THIS FUNCTION SIMULATES THE PAYMENT OF A BILL
-//WHEN A USER CLICKS THE "PAY" BUTTON FOR A BILL, THIS FUNCTION IS CALLED WITH THE BILL NAME AS AN ARGUMENT
-//WE SIMULATE THE PAYMENT PROCESS BY SETTING THE BILL'S STATUS TO TRUE IN THE BILLS OBJECT
-//AFTER PAYING THE BILL, WE UPDATE THE UI TO REFLECT THE CHANGES
-//WE ALSO CREATE A RECEIPT FOR THE PAYMENT AND SAVE IT TO LOCAL STORAGE 
+// PAY BILL FUNCTION
 //===============================
-
 function payBill(type) {
-
-    // NEW: Using a Timer (setTimeout) to show Asynchronous behavior
-    console.log("Processing payment...");
+    const btn = event.target;
+    btn.textContent = "Processing...";
+    btn.disabled = true;
 
     setTimeout(() => {
-
-        // SIMULATE THE PAYMENT PROCESS  
         bills[type] = true;
 
-        // create a receipt for the payment
         let receipt = {
             type: type,
             amount: type === 'rent' ? 500 : 50,
             date: new Date().toLocaleString()
         };
 
-        // SAVE THE RECEIPT TO THE RECEIPTS ARRAY
         receipts.push(receipt);
-
-        // SAVE THE RECEIPTS ARRAY TO LOCAL STORAGE
         localStorage.setItem('receipts', JSON.stringify(receipts));
 
-        // UPDATE THE UI
         updateUI();
-
-        // RE-RENDER RECEIPTS
         renderReceipts();
 
         alert(`${type.toUpperCase()} paid successfully!`);
-
     }, 1000);
 }
 
-
-
-//RE-RENDER THE RECEIPTS ON THE "MY RECEIPTS" PAGE
+//===============================
+// RECEIPT RENDERING
+//===============================
 function renderReceipts() {
+    let container = document.getElementById('receiptList');
+    if (!container) return;
 
-    //GET THE CONTAINER ELEMENT WHERE THE RECEIPTS WILL BE DISPLAYED
-    let receiptsContainer = document.getElementById('receiptList');
-    if (!receiptsContainer) return;
+    container.innerHTML = '';
 
-    //CLEAR THE OLD CONTENT
-    receiptsContainer.innerHTML = '';
-
-    //LOOP THROUGH ALL THE RECIEPTS
-    receipts.forEach(receipt => {
-
-        //CREATE A NEW LIST ITEM FOR EACH RECEIPT
-        let receiptItem = document.createElement('li');
-
-        // Apply Tailwind styling to make the receipts look like cards
-        receiptItem.className = "p-4 mb-2 bg-gray-50 rounded border shadow-sm flex justify-between items-center";
-
-        receiptItem.innerHTML = `
-            <div>
-                <p class="font-bold text-gray-800 uppercase">${receipt.type}</p>
-                <p class="text-xs text-gray-400">${receipt.date}</p>
-            </div>
-            <div class="text-blue-600 font-bold">$${receipt.amount}</div>
-        `;
-
-        // APPEND THE LIST ITEM
-        receiptsContainer.appendChild(receiptItem);
-    });
-}
-
-
-
-//RENT REMINDER FUNCTION
-function checkRentReminder() {
-
-    let reminder = document.getElementById('reminder');
-
-    let currentDate = new Date().getDate();
-
-    if (currentDate >= 25) {
-        reminder.classList.remove('hidden');
-        reminder.className = "mb-4 text-center font-bold p-3 rounded-lg bg-orange-100 text-orange-700";
-        reminder.textContent = "⚠️ Rent is almost due!";
-    } else {
-        reminder.classList.add('hidden');
-    }
-}
-
-
-
-// ===============================
-// LOGIN FUNCTION
-// ===============================
-function login() {
-
-    let username = document.getElementById("username").value;
-
-    if (username === "") {
-        alert("Please enter your name");
+    if (receipts.length === 0) {
+        container.innerHTML = '<p class="p-8 text-center text-slate-400 text-sm">No receipts found yet.</p>';
         return;
     }
 
-    localStorage.setItem("user", username);
+    [...receipts].reverse().forEach(receipt => {
+        let li = document.createElement('li');
+        li.className = "p-4 flex justify-between items-center hover:bg-slate-50 transition-colors";
 
-    document.getElementById("loginSection").classList.add('hidden');
-    document.getElementById("app").classList.remove('hidden');
+        li.innerHTML = `
+            <div>
+                <p class="font-bold uppercase text-xs text-slate-800">${receipt.type}</p>
+                <p class="text-[10px] text-slate-400">${receipt.date}</p>
+            </div>
+            <div class="text-blue-600 font-black">$${receipt.amount}</div>
+        `;
+
+        container.appendChild(li);
+    });
 }
 
+//===============================
+// LOGIN FUNCTION
+//===============================
+function login() {
+    let user = document.getElementById("username").value;
+    if (!user) return alert("Please enter your name");
 
+    localStorage.setItem("user", user);
+    document.getElementById("loginSection").classList.add('hidden');
+    document.getElementById("app").classList.remove('hidden');
 
-// ===============================
-// LOGOUT / VACATE FUNCTION
-// ===============================
+    updateUI();
+}
+
+//===============================
+// LOGOUT FUNCTION
+//===============================
 function logout() {
-
     localStorage.removeItem("user");
     location.reload();
 }
 
-
-
-// ===============================
-// AUTO LOGIN (KEEP USER LOGGED IN)
-// ===============================
-
-window.onload = function () {
-
-    let savedUser = localStorage.getItem("user");
-
-    if (savedUser) {
+//===============================
+// INITIALIZATION
+//===============================
+document.addEventListener("DOMContentLoaded", () => {
+    if (localStorage.getItem("user")) {
         document.getElementById("loginSection").classList.add('hidden');
         document.getElementById("app").classList.remove('hidden');
     }
 
-    // INITIALIZATION
+    const form = document.getElementById("searchForm");
+    if (form) {
+        form.addEventListener("submit", (e) => { 
+            e.preventDefault(); 
+            searchHouses(); 
+        });
+    }
+
     updateUI();
-    checkRentReminder();
     renderReceipts();
     fetchGlobalAnnouncements();
-};
+    renderHouseListings();
+});
